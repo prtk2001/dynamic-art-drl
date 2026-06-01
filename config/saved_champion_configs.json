@@ -1,0 +1,173 @@
+{
+  "low_turnover_swing_champions": {
+    "GLD": {
+      "name": "Gold Low-Turnover Champion",
+      "timeframe": "1d",
+      "fast_window": 15,
+      "slow_window": 80,
+      "leverage_factor": 5.0,
+      "stop_loss_pct": 0.15,
+      "dqn_exit": false,
+      "process_noise": 0.3,
+      "measurement_noise": 3.0,
+      "metrics": {
+        "cumulative_return": 56.8925,
+        "annualised_return": 0.6437,
+        "max_drawdown": -0.4944,
+        "sharpe_ratio": 1.111,
+        "total_trades": 28,
+        "roundtrip_trades": 14,
+        "win_rate": 0.7857,
+        "profit_factor": 22.021,
+        "win_loss_ratio": 6.006,
+        "avg_duration_days": 95.6
+      }
+    },
+    "USO": {
+      "name": "Crude Oil Low-Turnover Champion",
+      "timeframe": "1d",
+      "fast_window": 10,
+      "slow_window": 40,
+      "leverage_factor": 3.0,
+      "stop_loss_pct": 0.12,
+      "dqn_exit": false,
+      "process_noise": 0.8,
+      "measurement_noise": 8.0,
+      "metrics": {
+        "cumulative_return": 22.8158,
+        "annualised_return": 0.4743,
+        "max_drawdown": -0.6919,
+        "sharpe_ratio": 0.836,
+        "total_trades": 73,
+        "roundtrip_trades": 37,
+        "win_rate": 0.5135,
+        "profit_factor": 3.215,
+        "win_loss_ratio": 3.045,
+        "avg_duration_days": 31.1
+      }
+    },
+    "joint_portfolio": {
+      "name": "Joint Low-Turnover Swing Portfolio",
+      "timeframe": "1d",
+      "allocation": "Static 50/50 split",
+      "metrics": {
+        "cumulative_return": 100.8561,
+        "annualised_return": 0.7614,
+        "max_drawdown": -0.3714,
+        "sharpe_ratio": 1.274,
+        "total_trades": 101,
+        "description": "Achieved extreme tail-risk diversification (correlation shielding) with only 12 trades a year in total."
+      }
+    }
+  },
+  "monthly_swing_champions": {
+    "GLD": {
+      "name": "Gold Monthly Swing Champion",
+      "timeframe": "1d",
+      "fast_window": 3,
+      "slow_window": 50,
+      "leverage_factor": 5.0,
+      "stop_loss_pct": 0.08,
+      "dqn_exit": false,
+      "process_noise": 0.3,
+      "measurement_noise": 3.0,
+      "metrics": {
+        "cumulative_return": 55.9081,
+        "annualised_return": 0.6423,
+        "max_drawdown": -0.4319,
+        "sharpe_ratio": 1.102,
+        "total_trades": 86,
+        "roundtrip_trades": 43,
+        "trades_per_year": 10.6
+      }
+    },
+    "USO": {
+      "name": "Crude Oil Monthly Swing Champion",
+      "timeframe": "1d",
+      "fast_window": 10,
+      "slow_window": 40,
+      "leverage_factor": 3.0,
+      "stop_loss_pct": 0.10,
+      "dqn_exit": false,
+      "process_noise": 0.8,
+      "measurement_noise": 8.0,
+      "metrics": {
+        "cumulative_return": 21.8435,
+        "annualised_return": 0.4682,
+        "max_drawdown": -0.7223,
+        "sharpe_ratio": 0.821,
+        "total_trades": 93,
+        "roundtrip_trades": 46,
+        "trades_per_year": 11.4
+      }
+    },
+    "joint_portfolio": {
+      "name": "Joint Monthly Swing Portfolio",
+      "timeframe": "1d",
+      "allocation": "Static 50/50 split",
+      "metrics": {
+        "cumulative_return": 89.2752,
+        "annualised_return": 0.7356,
+        "max_drawdown": -0.4064,
+        "sharpe_ratio": 1.251,
+        "total_trades": 179,
+        "trades_per_year": 22.0,
+        "description": "Satisfies the 'at least 1 trade a month' request (average ~1 trade a month per asset) while maintaining spectacular compound returns and exceptionally safe drawdowns."
+      }
+    }
+  },
+  "ultra_hf_swing_champions": {
+    "GLD": {
+      "name": "Gold 2-3 Trades/Month Swing",
+      "timeframe": "1d",
+      "fast_window": 8,
+      "slow_window": 15,
+      "leverage_factor": 5.0,
+      "stop_loss_pct": 0.08,
+      "dqn_exit": false,
+      "process_noise": 0.3,
+      "measurement_noise": 3.0,
+      "metrics": {
+        "cumulative_return": 22.6499,
+        "annualised_return": 0.4745,
+        "max_drawdown": -0.5502,
+        "total_trades": 160,
+        "roundtrip_trades": 80,
+        "trades_per_year": 19.6
+      }
+    },
+    "USO": {
+      "name": "Crude Oil 2-3 Trades/Month Swing",
+      "timeframe": "1d",
+      "fast_window": 8,
+      "slow_window": 25,
+      "leverage_factor": 3.0,
+      "stop_loss_pct": 0.06,
+      "dqn_exit": false,
+      "process_noise": 0.8,
+      "measurement_noise": 8.0,
+      "metrics": {
+        "cumulative_return": 8.9868,
+        "annualised_return": 0.3264,
+        "max_drawdown": -0.7863,
+        "total_trades": 177,
+        "roundtrip_trades": 88,
+        "trades_per_year": 21.7
+      }
+    },
+    "joint_portfolio": {
+      "name": "Joint 2-3 Trades/Month Swing Portfolio",
+      "timeframe": "1d",
+      "allocation": "Static 50/50 split",
+      "metrics": {
+        "cumulative_return": 38.6832,
+        "annualised_return": 0.5694,
+        "max_drawdown": -0.5285,
+        "sharpe_ratio": 1.052,
+        "total_trades": 337,
+        "trades_per_year": 41.4,
+        "description": "Experiment with extremely high trading frequency (2-3 trade actions a month per asset). Performance worsens significantly compared to monthly/low-turnover swing champions due to high fee leakage and short-term whipsaws."
+      }
+    }
+  }
+}

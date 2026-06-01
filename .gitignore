@@ -1,0 +1,63 @@
+# Environment & Secrets
+.env
+*.pem
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual Environment
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Checkpoints & Models
+checkpoints/
+models_saved/
+*.zip
+*.pkl
+
+# Data Cache
+data_cache/
+*.h5
+*.hdf5
+
+# Logs
+logs/
+*.log
+tensorboard_logs/
+runs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Developmental Scratch & Search Utilities
+scratch/
+scratch_*.py
+find_realistic_*.py
+print_daily_results.py
+run_master_swing_search*.py
+run_paper_trading.py
+backtest_*.py
+
+# Research Paper Source & Compiled PDFs (Do Not Commit)
+research_paper.tex
+research_paper.md
+strategy_whitepaper.md
+*.pdf

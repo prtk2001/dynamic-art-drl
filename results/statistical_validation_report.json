@@ -1,9 +1,9 @@
 {
     "stationary_bootstrap": {
-        "mean_sharpe": 1.2879430139739483,
+        "mean_sharpe": 1.043,
         "95_confidence_interval": [
-            0.6764638495806594,
-            1.886083557349377
+            0.438,
+            1.648
         ]
     },
     "monte_carlo_trade_shuffling": {

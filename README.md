@@ -218,9 +218,7 @@ python live_runner.py --asset GLD --broker alpaca --risk_profile moderate --loop
 ```
 
 ---
-
-## 7. License & Acknowledgments
-
-This framework is released under the **MIT License**. 
-
-The author expresses sincere gratitude to the **Google DeepMind Advanced Agentic Coding team** and the **Antigravity AI coding assistant** for technical supervision, modular codebase refactoring, mathematical state-space formulation, and high-fidelity walk-forward validation assistance.
+ 
+## 7. License
+ 
+This framework is released under the **MIT License**.

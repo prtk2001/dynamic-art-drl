@@ -1,0 +1,42 @@
+[
+    {
+        "fee_label": "10 bps",
+        "buy_bps": 2.5,
+        "sell_bps": 7.5,
+        "cumulative_return_pct": 10894.510832865242,
+        "annualized_return_pct": 78.05272563722745,
+        "sharpe_ratio": 1.2936357265655654,
+        "max_drawdown_pct": -36.65221762431151,
+        "total_trades": 101
+    },
+    {
+        "fee_label": "20 bps",
+        "buy_bps": 5.0,
+        "sell_bps": 15.0,
+        "cumulative_return_pct": 10085.60894189656,
+        "annualized_return_pct": 76.39033299374948,
+        "sharpe_ratio": 1.2738858923099947,
+        "max_drawdown_pct": -37.137963980994705,
+        "total_trades": 101
+    },
+    {
+        "fee_label": "30 bps",
+        "buy_bps": 7.5,
+        "sell_bps": 22.5,
+        "cumulative_return_pct": 9333.976288486176,
+        "annualized_return_pct": 74.73835930082025,
+        "sharpe_ratio": 1.2541101224499847,
+        "max_drawdown_pct": -37.622859840512994,
+        "total_trades": 101
+    },
+    {
+        "fee_label": "50 bps",
+        "buy_bps": 12.5,
+        "sell_bps": 37.5,
+        "cumulative_return_pct": 7987.171525369897,
+        "annualized_return_pct": 71.46547859428519,
+        "sharpe_ratio": 1.2144911295429912,
+        "max_drawdown_pct": -38.59011172618255,
+        "total_trades": 101
+    }
+]

@@ -61,3 +61,7 @@ research_paper.tex
 research_paper.md
 strategy_whitepaper.md
 *.pdf
+
+# Backups
+backup_v1_gold_oil/
+

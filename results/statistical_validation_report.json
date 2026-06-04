@@ -1,16 +1,16 @@
 {
     "stationary_bootstrap": {
-        "mean_sharpe": 1.043,
+        "mean_sharpe": 1.265647655590749,
         "95_confidence_interval": [
-            0.438,
-            1.648
+            0.6816667212058449,
+            1.8710987827059686
         ]
     },
     "monte_carlo_trade_shuffling": {
         "actual_return_pct": 10065.237724012799,
-        "shuffled_mean_return_pct": 1156.7843625448895,
-        "shuffled_std_return_pct": 1340.9816357749655,
-        "p_value": 0.002
+        "shuffled_mean_return_pct": 1202.0652272949626,
+        "shuffled_std_return_pct": 1423.306810581736,
+        "p_value": 0.001
     },
     "hansen_spa_test": {
         "p_value": 0.03

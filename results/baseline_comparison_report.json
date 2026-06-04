@@ -1,0 +1,42 @@
+[
+    {
+        "strategy": "1x Buy-and-Hold (50/50)",
+        "cumulative_return_pct": 590.1437129433917,
+        "annualized_return_pct": 25.921746932165867,
+        "sharpe_ratio": 0.612778466433033,
+        "max_drawdown_pct": -35.04362283887338,
+        "total_trades": 0
+    },
+    {
+        "strategy": "12-Month Momentum (5x/3x)",
+        "cumulative_return_pct": 2675.008830707997,
+        "annualized_return_pct": 48.66463894730209,
+        "sharpe_ratio": 0.9194717172408488,
+        "max_drawdown_pct": -63.75110184828301,
+        "total_trades": 130
+    },
+    {
+        "strategy": "Monthly Rebalanced (5x/3x)",
+        "cumulative_return_pct": 13399.705399159717,
+        "annualized_return_pct": 79.55041823961417,
+        "sharpe_ratio": 0.48028118112321055,
+        "max_drawdown_pct": -95.5234912961468,
+        "total_trades": 202
+    },
+    {
+        "strategy": "Simple SMA(10,50) (no Kalman)",
+        "cumulative_return_pct": 3100.6776792522587,
+        "annualized_return_pct": 51.217736003559075,
+        "sharpe_ratio": 0.9868246462327823,
+        "max_drawdown_pct": -54.12409731922029,
+        "total_trades": 109
+    },
+    {
+        "strategy": "Proposed H-DRL Framework",
+        "cumulative_return_pct": 10085.60894189656,
+        "annualized_return_pct": 76.39033299374948,
+        "sharpe_ratio": 1.2738858923099947,
+        "max_drawdown_pct": -37.137963980994705,
+        "total_trades": 101
+    }
+]

@@ -1,0 +1,366 @@
+{
+    "proposed_mapping_rank": 4,
+    "total_permutations": 24,
+    "results": [
+        {
+            "permutation": [
+                "DQN",
+                "DDPG",
+                "PPO",
+                "A2C"
+            ],
+            "mapping": "LOW\u2192DQN | NORMAL\u2192DDPG | HIGH\u2192PPO | EXTREME\u2192A2C",
+            "is_proposed": false,
+            "cumulative_return_pct": 155.66631742229055,
+            "annualized_return_pct": 12.212382202836093,
+            "sharpe_ratio": 0.3269400387868665,
+            "max_drawdown_pct": -57.87006435275974,
+            "total_trades": 2785
+        },
+        {
+            "permutation": [
+                "DDPG",
+                "PPO",
+                "DQN",
+                "A2C"
+            ],
+            "mapping": "LOW\u2192DDPG | NORMAL\u2192PPO | HIGH\u2192DQN | EXTREME\u2192A2C",
+            "is_proposed": false,
+            "cumulative_return_pct": 152.24989513850412,
+            "annualized_return_pct": 12.027238109089456,
+            "sharpe_ratio": 0.3012307681056023,
+            "max_drawdown_pct": -61.34530253397904,
+            "total_trades": 2791
+        },
+        {
+            "permutation": [
+                "PPO",
+                "DDPG",
+                "DQN",
+                "A2C"
+            ],
+            "mapping": "LOW\u2192PPO | NORMAL\u2192DDPG | HIGH\u2192DQN | EXTREME\u2192A2C",
+            "is_proposed": false,
+            "cumulative_return_pct": 115.92873396613497,
+            "annualized_return_pct": 9.909610797913992,
+            "sharpe_ratio": 0.29005623123829427,
+            "max_drawdown_pct": -56.94146278878777,
+            "total_trades": 2637
+        },
+        {
+            "permutation": [
+                "DQN",
+                "PPO",
+                "DDPG",
+                "A2C"
+            ],
+            "mapping": "LOW\u2192DQN | NORMAL\u2192PPO | HIGH\u2192DDPG | EXTREME\u2192A2C",
+            "is_proposed": true,
+            "cumulative_return_pct": 33.33854244540812,
+            "annualized_return_pct": 3.5948015091454177,
+            "sharpe_ratio": 0.16979408834325438,
+            "max_drawdown_pct": -73.20813935926313,
+            "total_trades": 3074
+        },
+        {
+            "permutation": [
+                "PPO",
+                "DQN",
+                "DDPG",
+                "A2C"
+            ],
+            "mapping": "LOW\u2192PPO | NORMAL\u2192DQN | HIGH\u2192DDPG | EXTREME\u2192A2C",
+            "is_proposed": false,
+            "cumulative_return_pct": 32.76238541609504,
+            "annualized_return_pct": 3.53975126026711,
+            "sharpe_ratio": 0.153115821135268,
+            "max_drawdown_pct": -61.14003118915726,
+            "total_trades": 2562
+        },
+        {
+            "permutation": [
+                "DDPG",
+                "DQN",
+                "PPO",
+                "A2C"
+            ],
+            "mapping": "LOW\u2192DDPG | NORMAL\u2192DQN | HIGH\u2192PPO | EXTREME\u2192A2C",
+            "is_proposed": false,
+            "cumulative_return_pct": 25.5308447080171,
+            "annualized_return_pct": 2.8303564667722325,
+            "sharpe_ratio": 0.13310462125446043,
+            "max_drawdown_pct": -65.69885132796087,
+            "total_trades": 2558
+        },
+        {
+            "permutation": [
+                "PPO",
+                "DDPG",
+                "A2C",
+                "DQN"
+            ],
+            "mapping": "LOW\u2192PPO | NORMAL\u2192DDPG | HIGH\u2192A2C | EXTREME\u2192DQN",
+            "is_proposed": false,
+            "cumulative_return_pct": 14.916739699208037,
+            "annualized_return_pct": 1.7212949993312465,
+            "sharpe_ratio": 0.09786379383443201,
+            "max_drawdown_pct": -61.16187414967872,
+            "total_trades": 2769
+        },
+        {
+            "permutation": [
+                "DQN",
+                "A2C",
+                "PPO",
+                "DDPG"
+            ],
+            "mapping": "LOW\u2192DQN | NORMAL\u2192A2C | HIGH\u2192PPO | EXTREME\u2192DDPG",
+            "is_proposed": false,
+            "cumulative_return_pct": -8.648747699979397,
+            "annualized_return_pct": -1.1042073791143747,
+            "sharpe_ratio": 0.08966148792275185,
+            "max_drawdown_pct": -73.99677992005932,
+            "total_trades": 2419
+        },
+        {
+            "permutation": [
+                "PPO",
+                "A2C",
+                "DQN",
+                "DDPG"
+            ],
+            "mapping": "LOW\u2192PPO | NORMAL\u2192A2C | HIGH\u2192DQN | EXTREME\u2192DDPG",
+            "is_proposed": false,
+            "cumulative_return_pct": -14.025683802715093,
+            "annualized_return_pct": -1.8378763340283544,
+            "sharpe_ratio": 0.07130264504552457,
+            "max_drawdown_pct": -69.10133053257402,
+            "total_trades": 2417
+        },
+        {
+            "permutation": [
+                "A2C",
+                "PPO",
+                "DQN",
+                "DDPG"
+            ],
+            "mapping": "LOW\u2192A2C | NORMAL\u2192PPO | HIGH\u2192DQN | EXTREME\u2192DDPG",
+            "is_proposed": false,
+            "cumulative_return_pct": -33.28382994601932,
+            "annualized_return_pct": -4.846479570171914,
+            "sharpe_ratio": 0.013873553218883632,
+            "max_drawdown_pct": -67.4614891719747,
+            "total_trades": 3079
+        },
+        {
+            "permutation": [
+                "PPO",
+                "A2C",
+                "DDPG",
+                "DQN"
+            ],
+            "mapping": "LOW\u2192PPO | NORMAL\u2192A2C | HIGH\u2192DDPG | EXTREME\u2192DQN",
+            "is_proposed": false,
+            "cumulative_return_pct": -8.892273155836905,
+            "annualized_return_pct": -1.136606083012226,
+            "sharpe_ratio": -0.02195029778052842,
+            "max_drawdown_pct": -70.90596213458382,
+            "total_trades": 2515
+        },
+        {
+            "permutation": [
+                "DQN",
+                "A2C",
+                "DDPG",
+                "PPO"
+            ],
+            "mapping": "LOW\u2192DQN | NORMAL\u2192A2C | HIGH\u2192DDPG | EXTREME\u2192PPO",
+            "is_proposed": false,
+            "cumulative_return_pct": -23.06308898697932,
+            "annualized_return_pct": -3.1670062619474137,
+            "sharpe_ratio": -0.06473934750568339,
+            "max_drawdown_pct": -74.92046590837718,
+            "total_trades": 2545
+        },
+        {
+            "permutation": [
+                "A2C",
+                "DQN",
+                "PPO",
+                "DDPG"
+            ],
+            "mapping": "LOW\u2192A2C | NORMAL\u2192DQN | HIGH\u2192PPO | EXTREME\u2192DDPG",
+            "is_proposed": false,
+            "cumulative_return_pct": -49.07158966936078,
+            "annualized_return_pct": -7.948647162202671,
+            "sharpe_ratio": -0.0717786351293562,
+            "max_drawdown_pct": -72.45433169616715,
+            "total_trades": 2505
+        },
+        {
+            "permutation": [
+                "A2C",
+                "DDPG",
+                "PPO",
+                "DQN"
+            ],
+            "mapping": "LOW\u2192A2C | NORMAL\u2192DDPG | HIGH\u2192PPO | EXTREME\u2192DQN",
+            "is_proposed": false,
+            "cumulative_return_pct": -40.203350018884635,
+            "annualized_return_pct": -6.116837779066941,
+            "sharpe_ratio": -0.12093002568738931,
+            "max_drawdown_pct": -63.08294387806562,
+            "total_trades": 2898
+        },
+        {
+            "permutation": [
+                "A2C",
+                "PPO",
+                "DDPG",
+                "DQN"
+            ],
+            "mapping": "LOW\u2192A2C | NORMAL\u2192PPO | HIGH\u2192DDPG | EXTREME\u2192DQN",
+            "is_proposed": false,
+            "cumulative_return_pct": -29.74708749247187,
+            "annualized_return_pct": -4.24124821222176,
+            "sharpe_ratio": -0.1491751983428205,
+            "max_drawdown_pct": -80.60743232816863,
+            "total_trades": 3043
+        },
+        {
+            "permutation": [
+                "DQN",
+                "DDPG",
+                "A2C",
+                "PPO"
+            ],
+            "mapping": "LOW\u2192DQN | NORMAL\u2192DDPG | HIGH\u2192A2C | EXTREME\u2192PPO",
+            "is_proposed": false,
+            "cumulative_return_pct": -55.67409496677701,
+            "annualized_return_pct": -9.504244210587064,
+            "sharpe_ratio": -0.16026667014009816,
+            "max_drawdown_pct": -77.95920486864104,
+            "total_trades": 2932
+        },
+        {
+            "permutation": [
+                "A2C",
+                "DDPG",
+                "DQN",
+                "PPO"
+            ],
+            "mapping": "LOW\u2192A2C | NORMAL\u2192DDPG | HIGH\u2192DQN | EXTREME\u2192PPO",
+            "is_proposed": false,
+            "cumulative_return_pct": -52.385287741885456,
+            "annualized_return_pct": -8.705706839100202,
+            "sharpe_ratio": -0.16477105337704318,
+            "max_drawdown_pct": -72.44274682934702,
+            "total_trades": 2834
+        },
+        {
+            "permutation": [
+                "DDPG",
+                "PPO",
+                "A2C",
+                "DQN"
+            ],
+            "mapping": "LOW\u2192DDPG | NORMAL\u2192PPO | HIGH\u2192A2C | EXTREME\u2192DQN",
+            "is_proposed": false,
+            "cumulative_return_pct": -30.119915925215945,
+            "annualized_return_pct": -4.303772374700909,
+            "sharpe_ratio": -0.1925740403408979,
+            "max_drawdown_pct": -70.40752836564795,
+            "total_trades": 2971
+        },
+        {
+            "permutation": [
+                "DDPG",
+                "A2C",
+                "DQN",
+                "PPO"
+            ],
+            "mapping": "LOW\u2192DDPG | NORMAL\u2192A2C | HIGH\u2192DQN | EXTREME\u2192PPO",
+            "is_proposed": false,
+            "cumulative_return_pct": -54.904409074682206,
+            "annualized_return_pct": -9.312813743926718,
+            "sharpe_ratio": -0.25790575754082606,
+            "max_drawdown_pct": -83.17933271456718,
+            "total_trades": 2500
+        },
+        {
+            "permutation": [
+                "A2C",
+                "DQN",
+                "DDPG",
+                "PPO"
+            ],
+            "mapping": "LOW\u2192A2C | NORMAL\u2192DQN | HIGH\u2192DDPG | EXTREME\u2192PPO",
+            "is_proposed": false,
+            "cumulative_return_pct": -51.6807666867078,
+            "annualized_return_pct": -8.54096411287576,
+            "sharpe_ratio": -0.30481836150221275,
+            "max_drawdown_pct": -81.97816543776742,
+            "total_trades": 2531
+        },
+        {
+            "permutation": [
+                "DDPG",
+                "A2C",
+                "PPO",
+                "DQN"
+            ],
+            "mapping": "LOW\u2192DDPG | NORMAL\u2192A2C | HIGH\u2192PPO | EXTREME\u2192DQN",
+            "is_proposed": false,
+            "cumulative_return_pct": -53.25814383543833,
+            "annualized_return_pct": -8.91280443616248,
+            "sharpe_ratio": -0.31292472585414,
+            "max_drawdown_pct": -80.46471626329638,
+            "total_trades": 2599
+        },
+        {
+            "permutation": [
+                "DQN",
+                "PPO",
+                "A2C",
+                "DDPG"
+            ],
+            "mapping": "LOW\u2192DQN | NORMAL\u2192PPO | HIGH\u2192A2C | EXTREME\u2192DDPG",
+            "is_proposed": false,
+            "cumulative_return_pct": -65.03534694875037,
+            "annualized_return_pct": -12.101438979255509,
+            "sharpe_ratio": -0.49702528381297145,
+            "max_drawdown_pct": -72.61331350568851,
+            "total_trades": 3028
+        },
+        {
+            "permutation": [
+                "DDPG",
+                "DQN",
+                "A2C",
+                "PPO"
+            ],
+            "mapping": "LOW\u2192DDPG | NORMAL\u2192DQN | HIGH\u2192A2C | EXTREME\u2192PPO",
+            "is_proposed": false,
+            "cumulative_return_pct": -64.2131226903323,
+            "annualized_return_pct": -11.850298313929663,
+            "sharpe_ratio": -0.5166730868276378,
+            "max_drawdown_pct": -80.44061529779869,
+            "total_trades": 2529
+        },
+        {
+            "permutation": [
+                "PPO",
+                "DQN",
+                "A2C",
+                "DDPG"
+            ],
+            "mapping": "LOW\u2192PPO | NORMAL\u2192DQN | HIGH\u2192A2C | EXTREME\u2192DDPG",
+            "is_proposed": false,
+            "cumulative_return_pct": -77.5635241480875,
+            "annualized_return_pct": -16.760109511200895,
+            "sharpe_ratio": -0.9109715411910679,
+            "max_drawdown_pct": -78.81241131908087,
+            "total_trades": 2342
+        }
+    ]
+}

@@ -1,6 +1,6 @@
 # Dynamic ART-DRL: Adaptive Risk-sensitive Transformer DRL Quantitative Framework
 
-[![Paper Status](https://img.shields.io/badge/Preprint-arXiv-B31B1B.svg)](https://arxiv.org/)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20707897.svg)](https://doi.org/10.5281/zenodo.20707897)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Python Version](https://img.shields.io/badge/Python-3.9%20%7C%203.10-blue.svg)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C.svg)](https://pytorch.org/)
@@ -218,7 +218,28 @@ python live_runner.py --asset GLD --broker alpaca --risk_profile moderate --loop
 ```
 
 ---
+
+## 7. Citation
+
+If you use this work, methodology, or codebase in your research, please cite it as:
+
+```bibtex
+@misc{singh2026risksensitive,
+  author       = {Singh, Prateek},
+  title        = {Risk-Sensitive Portfolio Optimization under Regime Shifts: A Hierarchical Deep Reinforcement Learning Approach},
+  year         = {2026},
+  doi          = {10.5281/zenodo.20707897},
+  url          = {https://doi.org/10.5281/zenodo.20707897},
+  howpublished = {Zenodo Preprint}
+}
+```
+
+Or as:
+
+> Singh, P. (2026). Risk-Sensitive Portfolio Optimization under Regime Shifts: A Hierarchical Deep Reinforcement Learning Approach. Zenodo. https://doi.org/10.5281/zenodo.20707897
+
+---
  
-## 7. License
+## 8. License
  
 This framework is released under the **MIT License**.

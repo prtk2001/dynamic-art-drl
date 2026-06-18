@@ -198,23 +198,42 @@ python train.py --asset GLD --timesteps 100000 --save_dir checkpoints/gld/
 python train.py --asset USO --timesteps 100000 --save_dir checkpoints/uso/
 ```
 
-### Step 4: Run Walk-Forward Meta-Policy Execution
-Simulate the out-of-sample Walk-Forward Analysis (WFA) with the Dynamic Volatility Regime Router and the active risk overlays:
+### Step 4: Run Walk-Forward Rolling Backtests
+To run offline walk-forward backtests and generate interactive Plotly dashboard reports under `results/`:
 
 ```bash
-# Execute out-of-sample walk-forward test for GLD with PPO Meta-Policy
-python run_joint_paper_trading.py --asset GLD --meta_agent PPO --leverage 5.0 --output results/gld_wfa_report.html
+# Run backtest for Gold (GLD) on Daily timeframe
+python main.py backtest --asset GLD --timeframe 1d
 
-# Execute out-of-sample walk-forward test for USO with DDPG Meta-Policy
-python run_joint_paper_trading.py --asset USO --meta_agent DDPG --leverage 2.0 --output results/uso_wfa_report.html
+# Run backtest for Crude Oil (USO) on Daily timeframe
+python main.py backtest --asset USO --timeframe 1d
 ```
-This generates a premium interactive Plotly dashboard report in the `results/` directory (e.g. `results/gld_wfa_report.html`), comparing H-DRL returns, buy-and-hold benchmark, and drawdown curves.
+This generates a premium interactive Plotly dashboard report in the `results/` directory (e.g. `results/backtest_report_GLD_1d.html`), comparing H-DRL returns, buy-and-hold benchmark, and drawdown curves.
 
-### Step 5: Start Simulated Live Execution (Paper Trading)
-To deploy the framework in paper-trading mode, synchronizing live price ticks, calculating optimal lot allocations, and streaming LLM analysis from the Groq meta-analyst:
+### Step 5: Start Real-Time Live Execution (Paper Trading)
+The framework supports real-time paper trading loops on the Alpaca Sandbox using live market quotes:
+
+#### Option A: Run Joint Multi-Asset Portfolio (GLD + USO)
+Executes concurrent paper trading for both Gold and Oil as a single combined portfolio (static 50/50 capital split) with adaptive Kalman filtering and active trailing stops:
 
 ```bash
-python live_runner.py --asset GLD --broker alpaca --risk_profile moderate --loops 5
+# Run the highest-performing Low-Turnover Swing configuration (Recommended)
+python run_joint_paper_trading.py --mode swing_low --loops 1
+
+# Run the Monthly Swing configuration (satisfies at least 1 trade a month target)
+python run_joint_paper_trading.py --mode swing_monthly --loops 1
+```
+*Note: Use `--loops 1` to run a single daily sweep that checks signals and updates positions, or set `--loops 3000 --sleep 60` to run continuously during market hours.*
+
+#### Option B: Run Single-Asset Trading (with trained DRL agents or swing mode)
+Runs execution for a single asset with either a trained DRL meta-policy pool or swing parameters:
+
+```bash
+# Run Gold paper trading using PyTorch DRL checkpoints
+python run_paper_trading.py --asset GLD --mode drl --loops 1
+
+# Run Crude Oil paper trading using monthly swing crossover
+python run_paper_trading.py --asset USO --mode swing_monthly --loops 1
 ```
 
 ---

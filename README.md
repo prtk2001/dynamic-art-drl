@@ -1,6 +1,7 @@
 # Dynamic ART-DRL: Adaptive Risk-sensitive Transformer DRL Quantitative Framework
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20707897.svg)](https://doi.org/10.5281/zenodo.20707897)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20707661.svg)](https://doi.org/10.5281/zenodo.20707661)
+[![SSRN](https://img.shields.io/badge/SSRN-6943940-blue.svg)](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6943940)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Python Version](https://img.shields.io/badge/Python-3.9%20%7C%203.10-blue.svg)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C.svg)](https://pytorch.org/)
@@ -120,7 +121,7 @@ The project has been written using a production-grade, modular design:
 │   ├── ppo_agent.py              # PPO Specialist implementation via SB3
 │   ├── ddpg_agent.py             # DDPG Specialist implementation via SB3
 │   ├── a2c_agent.py              # A2C Specialist implementation via SB3
-│   └── groq_analyst.py           # LLM Market Regime Analyst (Llama 3.3 70B via Groq)
+│   └── groq_analyst.py           # LLM Market Regime Analyst (GPT-OSS 120B via Groq)
 ├── config/                       # Configuration Settings
 │   ├── settings.py               # API keys, DB directories, hyperparameter locks
 │   └── assets.py                 # Asset fee structures, slippage, and leverage limits
@@ -242,20 +243,39 @@ python run_paper_trading.py --asset USO --mode swing_monthly --loops 1
 
 If you use this work, methodology, or codebase in your research, please cite it as:
 
+### Preprint (SSRN)
+
+```bibtex
+@article{singh2026dynamicartdrl,
+  author       = {Singh, Prateek},
+  title        = {Risk-Sensitive Portfolio Optimization under Regime Shifts: A Hierarchical Deep Reinforcement Learning Approach},
+  year         = {2026},
+  journal      = {SSRN Electronic Journal},
+  doi          = {10.2139/ssrn.6943940},
+  url          = {https://ssrn.com/abstract=6943940}
+}
+```
+
+> Singh, P. (2026). Risk-Sensitive Portfolio Optimization under Regime Shifts: A Hierarchical Deep Reinforcement Learning Approach. *SSRN Electronic Journal*. DOI: [10.2139/ssrn.6943940](http://doi.org/10.2139/ssrn.6943940)
+>
+> **Links**: [SSRN Abstract](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6943940) · [doi.org](http://doi.org/10.2139/ssrn.6943940) · [ssrn.com/abstract=6943940](https://ssrn.com/abstract=6943940)
+
+### Code & Dataset (Zenodo)
+
 ```bibtex
 @misc{singh2026risksensitive,
   author       = {Singh, Prateek},
   title        = {Risk-Sensitive Portfolio Optimization under Regime Shifts: A Hierarchical Deep Reinforcement Learning Approach},
   year         = {2026},
-  doi          = {10.5281/zenodo.20707897},
-  url          = {https://doi.org/10.5281/zenodo.20707897},
+  doi          = {10.5281/zenodo.20707661},
+  url          = {https://doi.org/10.5281/zenodo.20707661},
   howpublished = {Zenodo Preprint}
 }
 ```
 
 Or as:
 
-> Singh, P. (2026). Risk-Sensitive Portfolio Optimization under Regime Shifts: A Hierarchical Deep Reinforcement Learning Approach. Zenodo. https://doi.org/10.5281/zenodo.20707897
+> Singh, P. (2026). Risk-Sensitive Portfolio Optimization under Regime Shifts: A Hierarchical Deep Reinforcement Learning Approach. Zenodo. https://doi.org/10.5281/zenodo.20707661
 
 ---
  

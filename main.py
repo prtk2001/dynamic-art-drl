@@ -39,7 +39,7 @@ def main() -> None:
         help="Asset config registry key (GOLD_MCX, CRUDE_MCX, GLD, USO)."
     )
     train_parser.add_argument(
-        "--timeframe", type=str, default="1d", choices=["1d", "1h"],
+        "--timeframe", type=str, default="1d", choices=["1d", "1h", "5min", "15min"],
         help="Trading timeframe interval."
     )
     train_parser.add_argument(
@@ -54,8 +54,12 @@ def main() -> None:
         help="Asset to backtest."
     )
     backtest_parser.add_argument(
-        "--timeframe", type=str, default="1d", choices=["1d", "1h"],
+        "--timeframe", type=str, default="1d", choices=["1d", "1h", "5min", "15min"],
         help="Trading interval timeframe."
+    )
+    backtest_parser.add_argument(
+        "--capital", type=float, default=None,
+        help="Initial starting capital override."
     )
     
     # ── Command: Live ────────────────────────────────────────────────────────
@@ -65,7 +69,7 @@ def main() -> None:
         help="Target asset for execution."
     )
     live_parser.add_argument(
-        "--timeframe", type=str, default="1d", choices=["1d", "1h"],
+        "--timeframe", type=str, default="1d", choices=["1d", "1h", "5min", "15min"],
         help="Trading timeframe interval."
     )
     live_parser.add_argument(
@@ -87,7 +91,8 @@ def main() -> None:
         elif args.command == "backtest":
             run_backtest(
                 asset_name=args.asset,
-                timeframe=args.timeframe
+                timeframe=args.timeframe,
+                capital=args.capital
             )
         elif args.command == "live":
             run_live_pipeline(

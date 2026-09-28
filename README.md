@@ -1,6 +1,7 @@
 # Dynamic ART-DRL: Adaptive Risk-sensitive Transformer DRL Quantitative Framework
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20707661.svg)](https://doi.org/10.5281/zenodo.20707661)
+[![SSRN](https://img.shields.io/badge/SSRN-6943940-blue.svg)](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6943940)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Python Version](https://img.shields.io/badge/Python-3.9%20%7C%203.10-blue.svg)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C.svg)](https://pytorch.org/)
@@ -120,7 +121,7 @@ The project has been written using a production-grade, modular design:
 │   ├── ppo_agent.py              # PPO Specialist implementation via SB3
 │   ├── ddpg_agent.py             # DDPG Specialist implementation via SB3
 │   ├── a2c_agent.py              # A2C Specialist implementation via SB3
-│   └── groq_analyst.py           # LLM Market Regime Analyst (Llama 3.3 70B via Groq)
+│   └── groq_analyst.py           # LLM Market Regime Analyst (GPT-OSS 120B via Groq)
 ├── config/                       # Configuration Settings
 │   ├── settings.py               # API keys, DB directories, hyperparameter locks
 │   └── assets.py                 # Asset fee structures, slippage, and leverage limits
@@ -198,23 +199,42 @@ python train.py --asset GLD --timesteps 100000 --save_dir checkpoints/gld/
 python train.py --asset USO --timesteps 100000 --save_dir checkpoints/uso/
 ```
 
-### Step 4: Run Walk-Forward Meta-Policy Execution
-Simulate the out-of-sample Walk-Forward Analysis (WFA) with the Dynamic Volatility Regime Router and the active risk overlays:
+### Step 4: Run Walk-Forward Rolling Backtests
+To run offline walk-forward backtests and generate interactive Plotly dashboard reports under `results/`:
 
 ```bash
-# Execute out-of-sample walk-forward test for GLD with PPO Meta-Policy
-python run_joint_paper_trading.py --asset GLD --meta_agent PPO --leverage 5.0 --output results/gld_wfa_report.html
+# Run backtest for Gold (GLD) on Daily timeframe
+python main.py backtest --asset GLD --timeframe 1d
 
-# Execute out-of-sample walk-forward test for USO with DDPG Meta-Policy
-python run_joint_paper_trading.py --asset USO --meta_agent DDPG --leverage 2.0 --output results/uso_wfa_report.html
+# Run backtest for Crude Oil (USO) on Daily timeframe
+python main.py backtest --asset USO --timeframe 1d
 ```
-This generates a premium interactive Plotly dashboard report in the `results/` directory (e.g. `results/gld_wfa_report.html`), comparing H-DRL returns, buy-and-hold benchmark, and drawdown curves.
+This generates a premium interactive Plotly dashboard report in the `results/` directory (e.g. `results/backtest_report_GLD_1d.html`), comparing H-DRL returns, buy-and-hold benchmark, and drawdown curves.
 
-### Step 5: Start Simulated Live Execution (Paper Trading)
-To deploy the framework in paper-trading mode, synchronizing live price ticks, calculating optimal lot allocations, and streaming LLM analysis from the Groq meta-analyst:
+### Step 5: Start Real-Time Live Execution (Paper Trading)
+The framework supports real-time paper trading loops on the Alpaca Sandbox using live market quotes:
+
+#### Option A: Run Joint Multi-Asset Portfolio (GLD + USO)
+Executes concurrent paper trading for both Gold and Oil as a single combined portfolio (static 50/50 capital split) with adaptive Kalman filtering and active trailing stops:
 
 ```bash
-python live_runner.py --asset GLD --broker alpaca --risk_profile moderate --loops 5
+# Run the highest-performing Low-Turnover Swing configuration (Recommended)
+python run_joint_paper_trading.py --mode swing_low --loops 1
+
+# Run the Monthly Swing configuration (satisfies at least 1 trade a month target)
+python run_joint_paper_trading.py --mode swing_monthly --loops 1
+```
+*Note: Use `--loops 1` to run a single daily sweep that checks signals and updates positions, or set `--loops 3000 --sleep 60` to run continuously during market hours.*
+
+#### Option B: Run Single-Asset Trading (with trained DRL agents or swing mode)
+Runs execution for a single asset with either a trained DRL meta-policy pool or swing parameters:
+
+```bash
+# Run Gold paper trading using PyTorch DRL checkpoints
+python run_paper_trading.py --asset GLD --mode drl --loops 1
+
+# Run Crude Oil paper trading using monthly swing crossover
+python run_paper_trading.py --asset USO --mode swing_monthly --loops 1
 ```
 
 ---
@@ -222,6 +242,25 @@ python live_runner.py --asset GLD --broker alpaca --risk_profile moderate --loop
 ## 7. Citation
 
 If you use this work, methodology, or codebase in your research, please cite it as:
+
+### Preprint (SSRN)
+
+```bibtex
+@article{singh2026dynamicartdrl,
+  author       = {Singh, Prateek},
+  title        = {Risk-Sensitive Portfolio Optimization under Regime Shifts: A Hierarchical Deep Reinforcement Learning Approach},
+  year         = {2026},
+  journal      = {SSRN Electronic Journal},
+  doi          = {10.2139/ssrn.6943940},
+  url          = {https://ssrn.com/abstract=6943940}
+}
+```
+
+> Singh, P. (2026). Risk-Sensitive Portfolio Optimization under Regime Shifts: A Hierarchical Deep Reinforcement Learning Approach. *SSRN Electronic Journal*. DOI: [10.2139/ssrn.6943940](http://doi.org/10.2139/ssrn.6943940)
+>
+> **Links**: [SSRN Abstract](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6943940) · [doi.org](http://doi.org/10.2139/ssrn.6943940) · [ssrn.com/abstract=6943940](https://ssrn.com/abstract=6943940)
+
+### Code & Dataset (Zenodo)
 
 ```bibtex
 @misc{singh2026risksensitive,

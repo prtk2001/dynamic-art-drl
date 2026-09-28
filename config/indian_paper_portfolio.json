@@ -1,0 +1,21 @@
+{
+    "portfolio_value": 1000000.0,
+    "cash": 1000000.0,
+    "holdings": {
+        "GOLD": {
+            "shares": 0.0,
+            "average_cost": 0.0,
+            "peak_price": 0.0,
+            "in_pos": false,
+            "prev_sig": 0.0
+        },
+        "CRUDEOIL": {
+            "shares": 0.0,
+            "average_cost": 0.0,
+            "peak_price": 0.0,
+            "in_pos": false,
+            "prev_sig": 0.0
+        }
+    },
+    "trade_history": []
+}

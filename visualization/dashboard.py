@@ -41,6 +41,19 @@ def generate_dashboard_html(
     initial_wallet = float(df_results["portfolio_value"].iloc[0])
     final_wallet = float(df_results["portfolio_value"].iloc[-1])
     
+    # Dynamic action filters and coloring
+    unique_actions = sorted(list(set(t['action'] for t in trade_log)))
+    action_options = "\n".join([f'<option value="{act}">{act}</option>' for act in ["ALL"] + unique_actions])
+    
+    def get_action_color(action: str) -> str:
+        act = action.upper()
+        if "BUY_CALL" in act or "CE" in act or act == "BUY":
+            return "#00FFA6"
+        elif "BUY_PUT" in act or "PE" in act or act == "SELL":
+            return "#FF4B4B"
+        else:
+            return "#94A3B8"
+    
     # ── 1. Create Subplots ───────────────────────────────────────────────────
     fig = make_subplots(
         rows=3, cols=1,
@@ -175,6 +188,11 @@ def generate_dashboard_html(
     # Calculate compounded annual returns for each year
     annual_rets = {}
     for year in monthly_rets:
+        year_slice = pv_series[pv_series.index.year == year]
+        if year_slice.empty:
+            annual_rets[year] = 0.0
+            continue
+            
         if year == pv_series.index[0].year:
             yr_start_val = start_val
         else:
@@ -182,9 +200,9 @@ def generate_dashboard_html(
             if not prev_yr_df.empty:
                 yr_start_val = prev_yr_df.iloc[-1]
             else:
-                yr_start_val = pv_series[pv_series.index.year == year].iloc[0]
+                yr_start_val = year_slice.iloc[0]
         
-        yr_end_val = pv_series[pv_series.index.year == year].iloc[-1]
+        yr_end_val = year_slice.iloc[-1]
         if yr_start_val == 0.0:
             annual_rets[year] = -1.0
         else:
@@ -564,9 +582,7 @@ def generate_dashboard_html(
                     <div class="filter-item select-item">
                         <label for="action-filter">Filter Action</label>
                         <select id="action-filter" onchange="filterTrades()">
-                            <option value="ALL">All Actions</option>
-                            <option value="BUY">BUY</option>
-                            <option value="SELL">SELL</option>
+                            {action_options}
                         </select>
                     </div>
                     <div class="filter-item select-item">
@@ -603,7 +619,7 @@ def generate_dashboard_html(
                             <tr class="trade-row" data-agent="{t['active_agent']}" data-action="{t['action']}" data-regime="{t['regime']}">
                                 <td>{t['step']}</td>
                                 <td>{str(t['date'])[:19]}</td>
-                                <td style="font-weight: 700; color: {'#00FFA6' if t['action'] == 'BUY' else '#FF4B4B'}">{t['action']}</td>
+                                <td style="font-weight: 700; color: {get_action_color(t['action'])}">{t['action']}</td>
                                 <td>{t['qty']:.2f}</td>
                                 <td>{currency_symbol}{t['price']:,.2f}</td>
                                 <td>{currency_symbol}{t['cost']:.2f}</td>

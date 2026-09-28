@@ -169,16 +169,12 @@ class UpstoxClient:
         mon_str = _MONTH_ABBR[month - 1]
         return f"MCX_FO|{symbol.upper()}{yy}{mon_str}FUT"
 
-    @staticmethod
     def resolve_active_instrument_key(
+        self,
         symbol: str,
         reference_date: Optional[datetime] = None,
     ) -> str:
-        """Resolve the *near-month active* contract instrument key.
-
-        MCX futures typically expire on the last trading day of the month.
-        If we are past the 25th of the current month, we roll to next month's
-        contract.
+        """Resolve the *near-month active* contract instrument key from the master list.
 
         Parameters
         ----------
@@ -193,22 +189,41 @@ class UpstoxClient:
             Instrument key for the near-month contract.
         """
         ref = reference_date or datetime.utcnow()
-        # Roll to next month if past the 25th (expiry zone)
-        if ref.day >= 25:
-            # Move to 1st of next month
-            if ref.month == 12:
-                target_year = ref.year + 1
-                target_month = 1
-            else:
-                target_year = ref.year
-                target_month = ref.month + 1
-        else:
-            target_year = ref.year
-            target_month = ref.month
-
-        key = UpstoxClient.build_instrument_key(symbol, target_year, target_month)
-        logger.debug("Resolved active contract for {}: {}", symbol, key)
-        return key
+        date_str = ref.strftime("%Y-%m-%d")
+        
+        df = self._get_instruments_master()
+        
+        # Standardize name for Crude Oil
+        name_map = {
+            "CRUDEOIL": "CRUDE OIL",
+            "CRUDE_OIL": "CRUDE OIL",
+            "GOLD": "GOLD"
+        }
+        target_name = name_map.get(symbol.upper(), symbol.upper())
+        
+        df_mcx = df[
+            (df["exchange"] == "MCX_FO") &
+            (df["instrument_type"] == "FUTCOM") &
+            (df["name"] == target_name) &
+            (df["expiry"] >= date_str)
+        ].copy()
+        
+        # Regex to filter for main large contract (exclude MINI, GUINEA, PETAL, etc.)
+        if symbol.upper() == "GOLD":
+            df_mcx = df_mcx[df_mcx["tradingsymbol"].str.match(r"^GOLD\d{2}[A-Z]{3}FUT$", na=False)]
+        elif symbol.upper() in ["CRUDEOIL", "CRUDE_OIL"]:
+            df_mcx = df_mcx[df_mcx["tradingsymbol"].str.match(r"^CRUDEOIL\d{2}[A-Z]{3}FUT$", na=False)]
+            
+        if df_mcx.empty:
+            logger.warning("No active contract found in master list for {} on/after {}. Using static fallback.", target_name, date_str)
+            yy = ref.year % 100
+            mon_str = _MONTH_ABBR[ref.month - 1]
+            return f"MCX_FO|{symbol.upper()}{yy}{mon_str}FUT"
+            
+        df_mcx.sort_values("expiry", inplace=True)
+        near = df_mcx.iloc[0]
+        logger.info("Resolved MCX active contract for {}: {} (expiry={})", symbol, near["tradingsymbol"], near["expiry"])
+        return str(near["instrument_key"])
 
     def search_instruments(
         self,
@@ -324,6 +339,8 @@ class UpstoxClient:
 
         df = pd.DataFrame(rows)
         df["timestamp"] = pd.to_datetime(df["timestamp"])
+        if df["timestamp"].dt.tz is not None:
+            df["timestamp"] = df["timestamp"].dt.tz_localize(None)
         df.set_index("timestamp", inplace=True)
         df.sort_index(inplace=True)
         return df[_OHLCV_COLUMNS]
@@ -502,6 +519,159 @@ class UpstoxClient:
         return quote_data
 
     # ------------------------------------------------------------------
+    # F&O Instrument Resolution
+    # ------------------------------------------------------------------
+
+    def _get_instruments_master(self) -> pd.DataFrame:
+        """Download and cache the Upstox complete instruments master list."""
+        cache_file = self._cache_dir / "upstox_instruments_master.parquet"
+        if cache_file.exists():
+            mtime = datetime.fromtimestamp(cache_file.stat().st_mtime)
+            if mtime.date() == datetime.utcnow().date():
+                try:
+                    return pd.read_parquet(cache_file)
+                except Exception as e:
+                    logger.warning("Corrupt parquet master cache, re-downloading: {}", e)
+
+        logger.info("Downloading complete instruments list from Upstox assets...")
+        url = "https://assets.upstox.com/market-quote/instruments/exchange/complete.csv.gz"
+        try:
+            import numpy as np
+            r = requests.get(url, timeout=30)
+            r.raise_for_status()
+            import gzip
+            import io
+            f = gzip.GzipFile(fileobj=io.BytesIO(r.content))
+            df = pd.read_csv(f)
+            # Filter for segments to reduce size in memory
+            df = df[df["exchange"].isin(["NSE_FO", "NSE_INDEX", "MCX_FO", "MCX", "BSE_FO", "BSE_INDEX"])].copy()
+            df.to_parquet(cache_file, engine="pyarrow")
+            logger.info("Saved filtered master instruments list ({} rows) to cache.", len(df))
+            return df
+        except Exception as exc:
+            logger.error("Failed to download instruments list: {}", exc)
+            if cache_file.exists():
+                logger.warning("Falling back to cached instruments list.")
+                return pd.read_parquet(cache_file)
+            raise RuntimeError(f"Could not retrieve instruments: {exc}")
+
+    def resolve_index_future_key(self, index_name: str, trading_date: datetime) -> Tuple[str, str, str]:
+        """Resolve the near-month index future contract for the given trading date.
+
+        Parameters
+        ----------
+        index_name : str
+            e.g. 'NIFTY', 'BANKNIFTY', 'SENSEX'
+        trading_date : datetime
+            Current trading date.
+
+        Returns
+        -------
+        instrument_key : str
+            e.g. 'NSE_FO|62329' or 'BSE_FO|12345'
+        tradingsymbol : str
+            e.g. 'NIFTY26JUNFUT'
+        expiry : str
+            e.g. '2026-06-30'
+        """
+        df = self._get_instruments_master()
+        date_str = trading_date.strftime("%Y-%m-%d")
+        exchange = "BSE_FO" if index_name.upper() == "SENSEX" else "NSE_FO"
+
+        # Filter for Index Futures
+        df_fut = df[
+            (df["exchange"] == exchange) &
+            (df["instrument_type"] == "FUTIDX") &
+            (df["name"] == index_name.upper()) &
+            (df["expiry"] >= date_str)
+        ].copy()
+
+        if df_fut.empty:
+            raise ValueError(f"No {index_name} futures contracts found in Upstox master for date >= {date_str}")
+
+        # Select near-month (minimum expiry date)
+        df_fut.sort_values("expiry", inplace=True)
+        near = df_fut.iloc[0]
+        return str(near["instrument_key"]), str(near["tradingsymbol"]), str(near["expiry"])
+
+    def resolve_nifty_future_key(self, trading_date: datetime) -> Tuple[str, str, str]:
+        """Wrapper for backward compatibility."""
+        return self.resolve_index_future_key("NIFTY", trading_date)
+
+    def resolve_index_option_key(
+        self,
+        index_name: str,
+        trading_date: datetime,
+        expiry_date_str: str,
+        strike: int,
+        option_type: str,
+    ) -> Tuple[str, str]:
+        """Resolve the instrument key for an index option contract.
+
+        Parameters
+        ----------
+        index_name : str
+            e.g. 'NIFTY', 'BANKNIFTY', 'SENSEX'
+        trading_date : datetime
+            Current trading date.
+        expiry_date_str : str
+            Expiry date string in 'YYYY-MM-DD' format.
+        strike : int
+            Option strike price.
+        option_type : str
+            'CE' or 'PE'.
+
+        Returns
+        -------
+        instrument_key : str
+        tradingsymbol : str
+        """
+        import numpy as np
+        df = self._get_instruments_master()
+        exchange = "BSE_FO" if index_name.upper() == "SENSEX" else "NSE_FO"
+
+        # Filter for option contract
+        df_opt = df[
+            (df["exchange"] == exchange) &
+            (df["instrument_type"] == "OPTIDX") &
+            (df["name"] == index_name.upper()) &
+            (df["expiry"] == expiry_date_str) &
+            (np.isclose(df["strike"].astype(float), float(strike))) &
+            (df["option_type"] == option_type)
+        ]
+
+        if df_opt.empty:
+            # Fallback search if exact strike mismatch (e.g., float precision)
+            df_opt = df[
+                (df["exchange"] == exchange) &
+                (df["instrument_type"] == "OPTIDX") &
+                (df["name"] == index_name.upper()) &
+                (df["expiry"] == expiry_date_str) &
+                (df["option_type"] == option_type)
+            ]
+            # Find closest strike
+            if not df_opt.empty:
+                df_opt = df_opt.iloc[(df_opt["strike"].astype(float) - float(strike)).abs().argsort()[:1]]
+            else:
+                raise ValueError(
+                    f"No {index_name} option contract found for expiry={expiry_date_str}, "
+                    f"strike={strike}, type={option_type}"
+                )
+
+        match = df_opt.iloc[0]
+        return str(match["instrument_key"]), str(match["tradingsymbol"])
+
+    def resolve_nifty_option_key(
+        self,
+        trading_date: datetime,
+        expiry_date_str: str,
+        strike: int,
+        option_type: str,
+    ) -> Tuple[str, str]:
+        """Wrapper for backward compatibility."""
+        return self.resolve_index_option_key("NIFTY", trading_date, expiry_date_str, strike, option_type)
+
+    # ------------------------------------------------------------------
     # Cache management
     # ------------------------------------------------------------------
 
@@ -524,6 +694,7 @@ class UpstoxClient:
             f.unlink(missing_ok=True)
         logger.info("Cleared {} cached file(s) (pattern={}).", len(files), pat)
         return len(files)
+
 
 
 # ---------------------------------------------------------------------------

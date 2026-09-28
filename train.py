@@ -19,11 +19,11 @@ from config.settings import (
     TENSORBOARD_DIR
 )
 from config.assets import get_asset
-from data.upstox_client import UpstoxClient
-from data.alpaca_client import AlpacaClient
+from data.data_loader import load_asset_data
 from data.kalman_filter import create_adaptive_filter
 from data.preprocessor import Preprocessor
 from environment.trading_env import DiscreteTradingEnv, ContinuousTradingEnv
+from environment.options_trading_env import DiscreteOptionsTradingEnv, ContinuousOptionsTradingEnv
 from agents.dqn_agent import DQNAgent
 from agents.ppo_agent import PPOAgent
 from agents.ddpg_agent import DDPGAgent
@@ -47,23 +47,12 @@ def run_training_pipeline(
     asset_config = get_asset(asset_name)
     
     # ── 1. Fetch historical data ─────────────────────────────────────────────
-    if asset_config.exchange == "MCX":
-        logger.info("Connecting to Upstox API for historical MCX futures data...")
-        # Since live token might expire or be invalid in dry-run, we mock data if API fails
-        try:
-            client = UpstoxClient()
-            raw_df = client.fetch_mcx(symbol=asset_config.symbol, interval=timeframe)
-        except Exception as e:
-            logger.warning("Upstox connection failed: {}. Generating synthetic market data...", e)
-            raw_df = generate_synthetic_data(asset_config, timeframe)
-    else:
-        logger.info("Connecting to Alpaca API for historical ETF data...")
-        try:
-            client = AlpacaClient()
-            raw_df = client.fetch_ohlcv(symbol=asset_config.symbol, timeframe=timeframe)
-        except Exception as e:
-            logger.warning("Alpaca connection failed: {}. Generating synthetic market data...", e)
-            raw_df = generate_synthetic_data(asset_config, timeframe)
+    logger.info("Fetching historical data using unified data loader...")
+    try:
+        raw_df = load_asset_data(asset_name, timeframe)
+    except Exception as e:
+        logger.warning("Data loading failed: {}. Generating synthetic market data...", e)
+        raw_df = generate_synthetic_data(asset_config, timeframe)
             
     # ── 2. Apply Kalman Filter ────────────────────────────────────────────────
     logger.info("Applying recursive Kalman Filter price denoising...")
@@ -85,20 +74,55 @@ def run_training_pipeline(
     prices = feature_df["close"].values
     
     # Discrete Env for DQN
-    env_discrete = DiscreteTradingEnv(
-        features=features,
-        prices=prices,
-        asset_config=asset_config,
-        initial_capital=asset_config.initial_capital
-    )
-    
-    # Continuous Env for PPO, DDPG, A2C
-    env_continuous = ContinuousTradingEnv(
-        features=features,
-        prices=prices,
-        asset_config=asset_config,
-        initial_capital=asset_config.initial_capital
-    )
+    if asset_name in ["NIFTY_OPT", "BANKNIFTY_OPT", "SENSEX_OPT"]:
+        logger.info("Initializing options-specific trading environments (ATM Rolling Premium)...")
+        ce_close = feature_df["ce_close"].values
+        pe_close = feature_df["pe_close"].values
+        ce_close_next = feature_df["ce_close_next"].values
+        pe_close_next = feature_df["pe_close_next"].values
+        
+        env_discrete = DiscreteOptionsTradingEnv(
+            features=features,
+            prices=prices,
+            ce_premiums=ce_close,
+            pe_premiums=pe_close,
+            ce_premiums_next=ce_close_next,
+            pe_premiums_next=pe_close_next,
+            asset_config=asset_config,
+            initial_capital=asset_config.initial_capital,
+            max_position_pct=0.15,
+            dates=feature_df.index,
+            expiries=feature_df["expiry"].values,
+            timeframe=timeframe
+        )
+        env_continuous = ContinuousOptionsTradingEnv(
+            features=features,
+            prices=prices,
+            ce_premiums=ce_close,
+            pe_premiums=pe_close,
+            ce_premiums_next=ce_close_next,
+            pe_premiums_next=pe_close_next,
+            asset_config=asset_config,
+            initial_capital=asset_config.initial_capital,
+            max_position_pct=0.15,
+            dates=feature_df.index,
+            expiries=feature_df["expiry"].values,
+            timeframe=timeframe
+        )
+    else:
+        env_discrete = DiscreteTradingEnv(
+            features=features,
+            prices=prices,
+            asset_config=asset_config,
+            initial_capital=asset_config.initial_capital
+        )
+        
+        env_continuous = ContinuousTradingEnv(
+            features=features,
+            prices=prices,
+            asset_config=asset_config,
+            initial_capital=asset_config.initial_capital
+        )
     
     # ── 5. Train heterogenous agents ─────────────────────────────────────────
     logger.info("=== Starting Heterogenous DRL Agent Training Pool ===")
@@ -160,7 +184,7 @@ def generate_synthetic_data(asset_config: get_asset, timeframe: str) -> pd.DataF
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train heterogenous DRL agents sequentially.")
     parser.add_argument("--asset", type=str, default="GOLD_MCX", help="Asset config name from registry.")
-    parser.add_argument("--timeframe", type=str, default="1d", choices=["1d", "1h"], help="Trading timeframe.")
+    parser.add_argument("--timeframe", type=str, default="1d", choices=["1d", "1h", "5min", "15min"], help="Trading timeframe.")
     parser.add_argument("--timesteps", type=str, default="20000", help="Training steps.")
     args = parser.parse_args()
     

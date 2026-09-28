@@ -41,6 +41,7 @@ try:
     from alpaca.data.historical import StockHistoricalDataClient
     from alpaca.data.requests import StockBarsRequest
     from alpaca.data.timeframe import TimeFrame
+    from alpaca.data.enums import DataFeed
 except ImportError:
     _ALPACA_AVAILABLE = False
     logger.warning(
@@ -206,11 +207,13 @@ class AlpacaClient:
         )
 
         try:
+            feed_param = DataFeed.IEX if _ALPACA_AVAILABLE else "iex"
             request = StockBarsRequest(
                 symbol_or_symbols=symbol,
                 timeframe=self._TF_MAP[timeframe],
                 start=datetime.fromisoformat(start),
                 end=datetime.fromisoformat(end),
+                feed=feed_param,
             )
             bars = self._client.get_stock_bars(request)
         except Exception as exc:

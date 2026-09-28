@@ -27,7 +27,7 @@ UPSTOX_ACCESS_TOKEN = os.getenv("UPSTOX_ACCESS_TOKEN", "")
 
 # Groq LLM (Meta-Analyst)
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
-GROQ_MODEL = "llama-3.3-70b-versatile"
+GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 
 # ── Data Configuration ───────────────────────────────────────────────────────
 DATA_CACHE_DIR = ROOT_DIR / "data_cache"
@@ -39,7 +39,7 @@ DATA_END_DATE = "2026-05-30"
 
 
 # Timeframes to test (all combos as requested)
-TIMEFRAMES = ["1d", "1h"]  # Daily and Hourly
+TIMEFRAMES = ["1d", "1h", "5min", "15min"]  # Daily, Hourly, 5-min, 15-min
 
 # ── Trading Environment Parameters ──────────────────────────────────────────
 
@@ -78,7 +78,7 @@ LOOKBACK_WINDOW = 60    # Bars of history fed to the encoder
 
 # Shared
 GAMMA = 0.99                  # Discount factor
-TRAINING_TIMESTEPS = 100_000  # Default total timesteps per agent
+TRAINING_TIMESTEPS = 500_000  # Default total timesteps per agent (scaled for V2)
 
 # DQN
 DQN_LEARNING_RATE = 1e-4
@@ -135,8 +135,11 @@ RISK_FREE_RATE = 0.05            # Annual risk-free rate (US 10Y Treasury approx
 
 # ── Paths ────────────────────────────────────────────────────────────────────
 
+NIFTY_LOCAL_DATA_DIR = Path("/Users/prateek/Documents/nifty_options/data/nifty_bank_nifty")
+
 CHECKPOINT_DIR = ROOT_DIR / "checkpoints"
 CHECKPOINT_DIR.mkdir(exist_ok=True)
+
 
 LOG_DIR = ROOT_DIR / "logs"
 LOG_DIR.mkdir(exist_ok=True)

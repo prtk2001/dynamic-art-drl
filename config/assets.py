@@ -142,7 +142,218 @@ CRUDE_MCX = AssetConfig(
     description="MCX Crude Oil futures — near-month active contract"
 )
 
+# ── Nifty 50 Index Derivatives (Indian Market) — Version 2 ────────────────────
 
+NIFTY_FUT = AssetConfig(
+    name="Nifty 50 Futures",
+    symbol="NIFTY",
+    exchange="NSE_FO",
+    instrument_key="NSE_FO|NIFTY",    # Resolved at runtime
+    asset_class="equity_index",
+    currency="INR",
+    lot_size=65,                       # Nifty lot size (updated 2026)
+    tick_size=0.05,                    # Tick size is 0.05
+    initial_capital=50_00_000,        # ₹50 Lakhs
+    buy_cost_bps=2.0,                  # NSE transaction charges are low
+    sell_cost_bps=2.0,
+    kalman_process_noise=0.5,
+    kalman_measurement_noise=5.0,
+    leverage_factor=5.0,
+    fast_window=10,
+    slow_window=80,
+    stop_loss_pct=0.03,
+    dqn_exit=False,
+    timeframe_params={
+        "1d": {"leverage": 5.0, "fast": 10, "slow": 80, "stop": 0.03, "dqn_exit": False},
+        "1h": {"leverage": 2.5, "fast": 70, "slow": 560, "stop": 0.04, "dqn_exit": False},
+        "5min": {"leverage": 2.0, "fast": 60, "slow": 480, "stop": 0.005, "dqn_exit": False},
+        "15min": {"leverage": 2.5, "fast": 20, "slow": 160, "stop": 0.008, "dqn_exit": False}
+    },
+    description="Nifty 50 Index Futures — continuous near-month contract"
+)
+
+NIFTY_OPT = AssetConfig(
+    name="Nifty 50 ATM Options",
+    symbol="NIFTY_OPT",
+    exchange="NSE_FO",
+    instrument_key="NSE_FO|NIFTY_OPT", # Resolved at runtime
+    asset_class="equity_index_option",
+    currency="INR",
+    lot_size=65,                       # Lot size (updated 2026)
+    tick_size=0.05,
+    initial_capital=50_00_000,        # ₹50 Lakhs
+    buy_cost_bps=2.0,
+    sell_cost_bps=2.0,
+    kalman_process_noise=0.5,
+    kalman_measurement_noise=5.0,
+    leverage_factor=1.0,               # Options have high inherent leverage
+    fast_window=10,
+    slow_window=80,
+    stop_loss_pct=0.15,                # Options have higher volatility
+    dqn_exit=False,
+    timeframe_params={
+        "1d": {"leverage": 1.0, "fast": 10, "slow": 80, "stop": 0.15, "dqn_exit": False},
+        "1h": {"leverage": 1.0, "fast": 70, "slow": 560, "stop": 0.20, "dqn_exit": False},
+        "5min": {"leverage": 1.0, "fast": 60, "slow": 480, "stop": 0.03, "dqn_exit": False,
+                 "profit_target": 0.05, "time_decay_bars": 8, "cooldown": 8,
+                 "trailing_sl": 0.08, "decay_sl": False, "max_lots": 10, "compounding": True},
+        "15min": {"leverage": 1.0, "fast": 20, "slow": 160, "stop": 0.25, "dqn_exit": False,
+                   "profit_target": 0.40, "time_decay_bars": 8, "cooldown": 2}
+    },
+    description="Nifty 50 Index Options — ATM CE/PE premium trading"
+)
+
+# ── Bank Nifty Index Derivatives (Indian Market) — Added 2026 ─────────────────
+
+BANKNIFTY_FUT = AssetConfig(
+    name="Bank Nifty Futures",
+    symbol="BANKNIFTY",
+    exchange="NSE_FO",
+    instrument_key="NSE_FO|BANKNIFTY",
+    asset_class="equity_index",
+    currency="INR",
+    lot_size=30,                       # Bank Nifty lot size (updated 2026)
+    tick_size=0.05,
+    initial_capital=50_00_000,        # ₹50 Lakhs
+    buy_cost_bps=2.0,
+    sell_cost_bps=2.0,
+    kalman_process_noise=0.5,
+    kalman_measurement_noise=5.0,
+    leverage_factor=5.0,
+    fast_window=10,
+    slow_window=80,
+    stop_loss_pct=0.03,
+    dqn_exit=False,
+    timeframe_params={
+        "1d": {"leverage": 5.0, "fast": 10, "slow": 80, "stop": 0.03, "dqn_exit": False},
+        "1h": {"leverage": 2.5, "fast": 70, "slow": 560, "stop": 0.04, "dqn_exit": False},
+        "5min": {"leverage": 2.0, "fast": 60, "slow": 480, "stop": 0.005, "dqn_exit": False},
+        "15min": {"leverage": 2.5, "fast": 20, "slow": 160, "stop": 0.008, "dqn_exit": False}
+    },
+    description="Bank Nifty Index Futures — continuous near-month contract"
+)
+
+BANKNIFTY_OPT = AssetConfig(
+    name="Bank Nifty ATM Options",
+    symbol="BANKNIFTY_OPT",
+    exchange="NSE_FO",
+    instrument_key="NSE_FO|BANKNIFTY_OPT",
+    asset_class="equity_index_option",
+    currency="INR",
+    lot_size=30,                       # Bank Nifty lot size (updated 2026)
+    tick_size=0.05,
+    initial_capital=50_00_000,        # ₹50 Lakhs
+    buy_cost_bps=2.0,
+    sell_cost_bps=2.0,
+    kalman_process_noise=0.5,
+    kalman_measurement_noise=5.0,
+    leverage_factor=1.0,
+    fast_window=10,
+    slow_window=80,
+    stop_loss_pct=0.15,
+    dqn_exit=False,
+    timeframe_params={
+        "1d": {"leverage": 1.0, "fast": 10, "slow": 80, "stop": 0.15, "dqn_exit": False},
+        "1h": {"leverage": 1.0, "fast": 70, "slow": 560, "stop": 0.20, "dqn_exit": False},
+        "5min": {"leverage": 1.0, "fast": 60, "slow": 480, "stop": 0.03, "dqn_exit": False,
+                 "profit_target": 0.05, "time_decay_bars": 8, "cooldown": 8,
+                 "trailing_sl": 0.08, "decay_sl": False, "max_lots": 10, "compounding": True},
+        "15min": {"leverage": 1.0, "fast": 20, "slow": 160, "stop": 0.25, "dqn_exit": False,
+                   "profit_target": 0.40, "time_decay_bars": 8, "cooldown": 2}
+    },
+    description="Bank Nifty Index Options — ATM CE/PE premium trading"
+)
+
+# ── BSE Sensex Index Derivatives (Indian Market) — Added 2026 ─────────────────
+
+SENSEX_FUT = AssetConfig(
+    name="BSE Sensex Futures",
+    symbol="SENSEX",
+    exchange="BSE",
+    instrument_key="BSE|SENSEX",
+    asset_class="equity_index",
+    currency="INR",
+    lot_size=20,                       # Sensex lot size (updated 2026)
+    tick_size=0.05,
+    initial_capital=50_00_000,        # ₹50 Lakhs
+    buy_cost_bps=2.0,
+    sell_cost_bps=2.0,
+    kalman_process_noise=0.5,
+    kalman_measurement_noise=5.0,
+    leverage_factor=5.0,
+    fast_window=10,
+    slow_window=80,
+    stop_loss_pct=0.03,
+    dqn_exit=False,
+    timeframe_params={
+        "1d": {"leverage": 5.0, "fast": 10, "slow": 80, "stop": 0.03, "dqn_exit": False},
+        "1h": {"leverage": 2.5, "fast": 70, "slow": 560, "stop": 0.04, "dqn_exit": False},
+        "5min": {"leverage": 2.0, "fast": 60, "slow": 480, "stop": 0.005, "dqn_exit": False},
+        "15min": {"leverage": 2.5, "fast": 20, "slow": 160, "stop": 0.008, "dqn_exit": False}
+    },
+    description="BSE Sensex Index Futures — continuous near-month contract"
+)
+
+SENSEX_OPT = AssetConfig(
+    name="BSE Sensex ATM Options",
+    symbol="SENSEX_OPT",
+    exchange="BSE",
+    instrument_key="BSE|SENSEX_OPT",
+    asset_class="equity_index_option",
+    currency="INR",
+    lot_size=20,                       # Sensex lot size (updated 2026)
+    tick_size=0.05,
+    initial_capital=50_00_000,        # ₹50 Lakhs
+    buy_cost_bps=2.0,
+    sell_cost_bps=2.0,
+    kalman_process_noise=0.5,
+    kalman_measurement_noise=5.0,
+    leverage_factor=1.0,
+    fast_window=10,
+    slow_window=80,
+    stop_loss_pct=0.15,
+    dqn_exit=False,
+    timeframe_params={
+        "1d": {"leverage": 1.0, "fast": 10, "slow": 80, "stop": 0.15, "dqn_exit": False},
+        "1h": {"leverage": 1.0, "fast": 70, "slow": 560, "stop": 0.20, "dqn_exit": False},
+        "5min": {"leverage": 1.0, "fast": 60, "slow": 480, "stop": 0.03, "dqn_exit": False,
+                 "profit_target": 0.05, "time_decay_bars": 8, "cooldown": 8,
+                 "trailing_sl": 0.08, "decay_sl": False, "max_lots": 10, "compounding": True},
+        "15min": {"leverage": 1.0, "fast": 20, "slow": 160, "stop": 0.25, "dqn_exit": False,
+                   "profit_target": 0.40, "time_decay_bars": 8, "cooldown": 2}
+    },
+    description="BSE Sensex Index Options — ATM CE/PE premium trading"
+)
+
+# ── Forex USD/EUR (Global Market) — Version 2 ────────────────────────────────
+
+USDEUR_FOREX = AssetConfig(
+    name="USD/EUR Forex Pair",
+    symbol="USDEUR",
+    exchange="FOREX",
+    instrument_key="USDEUR=X",        # Yahoo Finance ticker
+    asset_class="forex",
+    currency="EUR",
+    lot_size=1,
+    tick_size=0.0001,
+    initial_capital=100_000,          # $100,000
+    buy_cost_bps=1.0,                  # Forex spreads are tight
+    sell_cost_bps=1.0,
+    kalman_process_noise=0.2,
+    kalman_measurement_noise=2.0,
+    leverage_factor=20.0,              # Forex typically has high leverage
+    fast_window=20,
+    slow_window=50,
+    stop_loss_pct=0.015,
+    dqn_exit=False,
+    timeframe_params={
+        "1d": {"leverage": 20.0, "fast": 20, "slow": 50, "stop": 0.015, "dqn_exit": False},
+        "1h": {"leverage": 10.0, "fast": 140, "slow": 350, "stop": 0.02, "dqn_exit": False},
+        "5min": {"leverage": 5.0, "fast": 60, "slow": 480, "stop": 0.003, "dqn_exit": False},
+        "15min": {"leverage": 8.0, "fast": 20, "slow": 160, "stop": 0.005, "dqn_exit": False}
+    },
+    description="USD/EUR exchange rate — fetched from Yahoo Finance"
+)
 
 # ── Asset Registry ──────────────────────────────────────────────────────────
 
@@ -150,14 +361,23 @@ ASSET_REGISTRY = {
     # Alpaca (US)
     "GLD": GLD_ALPACA,
     "USO": USO_ALPACA,
-    # Upstox (MCX India) — PRIMARY
+    # Upstox (MCX India)
     "GOLD_MCX": GOLD_MCX,
     "CRUDE_MCX": CRUDE_MCX,
+    # Nifty, Bank Nifty, Sensex & Forex (Version 2)
+    "NIFTY_FUT": NIFTY_FUT,
+    "NIFTY_OPT": NIFTY_OPT,
+    "BANKNIFTY_FUT": BANKNIFTY_FUT,
+    "BANKNIFTY_OPT": BANKNIFTY_OPT,
+    "SENSEX_FUT": SENSEX_FUT,
+    "SENSEX_OPT": SENSEX_OPT,
+    "USDEUR": USDEUR_FOREX,
 }
 
 # Default assets for backtesting
 BACKTEST_ASSETS_ALPACA = ["GLD", "USO"]
 BACKTEST_ASSETS_MCX = ["GOLD_MCX", "CRUDE_MCX"]
+BACKTEST_ASSETS_V2 = ["NIFTY_FUT", "NIFTY_OPT", "BANKNIFTY_FUT", "BANKNIFTY_OPT", "SENSEX_FUT", "SENSEX_OPT", "USDEUR"]
 
 # All timeframe + asset combinations to test
 BACKTEST_COMBOS = [
@@ -165,6 +385,14 @@ BACKTEST_COMBOS = [
     ("USO", "1d"), ("USO", "1h"),
     ("GOLD_MCX", "1d"), ("GOLD_MCX", "1h"),
     ("CRUDE_MCX", "1d"), ("CRUDE_MCX", "1h"),
+    # Version 2
+    ("NIFTY_FUT", "1d"), ("NIFTY_FUT", "1h"), ("NIFTY_FUT", "5min"), ("NIFTY_FUT", "15min"),
+    ("NIFTY_OPT", "1d"), ("NIFTY_OPT", "1h"), ("NIFTY_OPT", "5min"), ("NIFTY_OPT", "15min"),
+    ("BANKNIFTY_FUT", "1d"), ("BANKNIFTY_FUT", "1h"), ("BANKNIFTY_FUT", "5min"), ("BANKNIFTY_FUT", "15min"),
+    ("BANKNIFTY_OPT", "1d"), ("BANKNIFTY_OPT", "1h"), ("BANKNIFTY_OPT", "5min"), ("BANKNIFTY_OPT", "15min"),
+    ("SENSEX_FUT", "1d"), ("SENSEX_FUT", "1h"), ("SENSEX_FUT", "5min"), ("SENSEX_FUT", "15min"),
+    ("SENSEX_OPT", "1d"), ("SENSEX_OPT", "1h"), ("SENSEX_OPT", "5min"), ("SENSEX_OPT", "15min"),
+    ("USDEUR", "1d"), ("USDEUR", "1h"), ("USDEUR", "5min"), ("USDEUR", "15min"),
 ]
 
 
@@ -175,3 +403,4 @@ def get_asset(name: str) -> AssetConfig:
             f"Unknown asset '{name}'. Available: {list(ASSET_REGISTRY.keys())}"
         )
     return ASSET_REGISTRY[name]
+

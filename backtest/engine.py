@@ -116,135 +116,218 @@ class BacktestEngine:
         # We start out-of-sample testing from the first split's test_start
         first_test_idx = splits[0][2]
         n_samples = len(self.df_features)
-        
-        # Initialize tracking arrays
-        portfolio_values = np.zeros(n_samples)
-        portfolio_values[:first_test_idx] = self.asset_config.initial_capital
-        
-        # Hold state
-        cash = self.asset_config.initial_capital
-        shares = 0.0
-        self._prev_action = 0.0
-        
-        # Realized PnL & Position average cost tracking
-        avg_entry_price = 0.0
-        current_shares = 0.0
-        
-        active_agents = []
-        vol_regimes = []
         prices = self.df_features["close"].values
         
-        trade_log = []
-        
-        # Dynamic switching backtest
-        logger.info("Executing walk-forward dynamic switching backtest...")
-        
-        for idx in range(first_test_idx, n_samples):
-            # 1. Volatility Regime switching decision
-            # Feed prices up to current tick
-            sub_prices = prices[:idx]
-            agent_name, regime, vol_met = self.router.route(sub_prices)
+        if "_OPT" in self.asset_config.symbol:
+            # Walk-forward options backtesting using Gymnasium Environment (Option A)
+            from environment.options_trading_env import ContinuousOptionsTradingEnv
             
-            active_agents.append(agent_name)
-            vol_regimes.append(regime.value)
+            slice_df = self.df_features.iloc[first_test_idx:]
+            feature_cols = ['rsi_14', 'macd', 'macd_signal', 'macd_diff', 'bb_width', 'cci_30', 'dx_30', 'atr_14', 'return_simple', 'return_log', 'vol_rolling_30', 'vol_ewma']
             
-            # 2. Agent policy action prediction
-            # In a full run, we load the trained checkpoint for the active agent
-            # corresponding to the current rolling train window.
-            # Here we mock the action based on the active agent's policy profile
-            # to make the backtest runner completely self-contained and runnable:
-            # - DQN: Discrete allocation anchor, acts cautiously during extreme spikes
-            # - PPO/DDPG: Captures trends smoothly
-            # - A2C: Adaptive fast transitions
-            action = self._mock_agent_prediction(agent_name, idx)
+            env = ContinuousOptionsTradingEnv(
+                features=slice_df[feature_cols].values,
+                prices=slice_df["close"].values,
+                ce_premiums=slice_df["ce_close"].values,
+                pe_premiums=slice_df["pe_close"].values,
+                ce_premiums_next=slice_df["ce_close_next"].values,
+                pe_premiums_next=slice_df["pe_close_next"].values,
+                asset_config=self.asset_config,
+                initial_capital=self.asset_config.initial_capital,
+                max_position_pct=0.15,
+                dates=slice_df.index,
+                expiries=slice_df["expiry"].values,
+                timeframe=self.timeframe
+            )
             
-            # 3. Step portfolio simulator with transaction costs
-            curr_price = prices[idx]
-            portfolio_value = cash + shares * curr_price
+            env.reset()
             
-            # Avoid churning: if action has not changed, keep the exact same number of shares
-            if action == self._prev_action:
-                target_shares = shares
-            else:
-                leverage = self.leverage
-                target_alloc_value = portfolio_value * action * leverage
-                target_shares = target_alloc_value / curr_price
+            portfolio_values = np.zeros(n_samples)
+            portfolio_values[:first_test_idx] = self.asset_config.initial_capital
+            
+            active_agents = []
+            vol_regimes = []
+            trade_log = []
+            
+            logger.info("Executing walk-forward options backtest using Gymnasium Environment...")
+            
+            for idx in range(first_test_idx, n_samples):
+                sub_prices = prices[:idx]
+                agent_name, regime, vol_met = self.router.route(sub_prices)
                 
-                # Handle lot size rounding for Upstox / MCX if needed
-                if self.asset_config.exchange == "MCX":
-                    target_lots = int(target_alloc_value / (curr_price * self.asset_config.lot_size))
-                    target_shares = target_lots * self.asset_config.lot_size
+                active_agents.append(agent_name)
+                vol_regimes.append(regime.value)
+                
+                # Predict action
+                action = self._mock_agent_prediction_options(agent_name, idx)
+                
+                # Step env (requires array input)
+                obs, reward, done, truncated, info = env.step(np.array([action]))
+                
+                portfolio_values[idx] = env._portfolio_value_val
+                
+                if done:
+                    # Fill the rest with last portfolio value
+                    portfolio_values[idx:] = env._portfolio_value_val
+                    remaining = n_samples - 1 - idx
+                    active_agents.extend([agent_name] * remaining)
+                    vol_regimes.extend([regime.value] * remaining)
+                    break
                     
-            share_diff = target_shares - shares
-            trade_value = abs(share_diff) * curr_price
-            
-            if share_diff != 0 and action != self._prev_action:
-                cost_bps = self.asset_config.buy_cost_bps if share_diff > 0 else self.asset_config.sell_cost_bps
-                cost = trade_value * (cost_bps / 10000.0)
-                
-                # Calculate Realized P&L
-                realized_gross = 0.0
-                realized_net = 0.0
-                
-                if share_diff > 0:
-                    # BUY trade: opens or increases position
-                    new_shares = current_shares + share_diff
-                    avg_entry_price = (current_shares * avg_entry_price + share_diff * curr_price) / new_shares
-                    current_shares = new_shares
-                else:
-                    # SELL trade: closes or reduces position
-                    qty_sold = abs(share_diff)
-                    # Use the minimum of current shares or qty_sold to avoid underflow
-                    shares_to_calc = min(current_shares, qty_sold)
-                    realized_gross = shares_to_calc * (curr_price - avg_entry_price)
-                    realized_net = realized_gross - cost
-                    current_shares = max(current_shares - qty_sold, 0.0)
-                    if current_shares < 1e-5:
-                        avg_entry_price = 0.0
-                        current_shares = 0.0
-                
-                # Update Cash (cash can go negative representing margin borrowing)
-                cash -= share_diff * curr_price + cost
-                shares = target_shares
-                self._prev_action = action
-                
+            # Map env trade log to backtest format
+            for rec in env._trade_log:
+                step_idx = first_test_idx + rec.step
+                if step_idx >= n_samples:
+                    continue
+                action_type = "FLAT"
+                if rec.ce_action > 0:
+                    action_type = "BUY_CALL"
+                elif rec.pe_action > 0:
+                    action_type = "BUY_PUT"
+                    
                 trade_log.append({
-                    "step": idx,
-                    "date": self.df_features.index[idx] if isinstance(self.df_features.index, pd.DatetimeIndex) else idx,
+                    "step": step_idx,
+                    "date": self.df_features.index[step_idx] if isinstance(self.df_features.index, pd.DatetimeIndex) else step_idx,
                     "symbol": self.asset_config.symbol,
-                    "action": "BUY" if share_diff > 0 else "SELL",
-                    "qty": abs(share_diff),
-                    "price": curr_price,
-                    "cost": cost,
-                    "avg_entry_price": avg_entry_price,
-                    "realized_gross_pnl": realized_gross,
-                    "realized_net_pnl": realized_net,
-                    "position_size": current_shares,
-                    "active_agent": agent_name,
-                    "regime": regime.value
+                    "action": action_type,
+                    "qty": rec.ce_qty if rec.ce_action > 0 else (rec.pe_qty if rec.pe_action > 0 else 0.0),
+                    "price": prices[step_idx],
+                    "cost": rec.transaction_cost,
+                    "avg_entry_price": rec.ce_premium if rec.ce_action > 0 else (rec.pe_premium if rec.pe_action > 0 else 0.0),
+                    "realized_gross_pnl": 0.0,
+                    "realized_net_pnl": 0.0,
+                    "position_size": rec.ce_qty if rec.ce_action > 0 else (rec.pe_qty if rec.pe_action > 0 else 0.0),
+                    "active_agent": active_agents[rec.step] if rec.step < len(active_agents) else "UNKNOWN",
+                    "regime": vol_regimes[rec.step] if rec.step < len(vol_regimes) else "UNKNOWN"
                 })
-            else:
-                # Do not execute trade, keep current shares, cash remains unchanged
-                pass
                 
-            # Compute portfolio value
-            portfolio_values[idx] = cash + shares * curr_price
+        else:
+            # Initialize tracking arrays for standard assets
+            portfolio_values = np.zeros(n_samples)
+            portfolio_values[:first_test_idx] = self.asset_config.initial_capital
             
-            # Enforce Bankruptcy Liquidation (Real-world scenario)
-            if portfolio_values[idx] <= 0:
-                logger.error(
-                    "BANKRUPTCY ALERT: Portfolio went bankrupt at step {} ({}) due to extreme leverage drawdowns! All assets liquidated to 0.",
-                    idx,
-                    self.df_features.index[idx] if isinstance(self.df_features.index, pd.DatetimeIndex) else idx
-                )
-                portfolio_values[idx:] = 0.0
-                cash = 0.0
-                shares = 0.0
-                # Pad active_agents and vol_regimes to match length
-                remaining_steps = (n_samples - first_test_idx) - len(active_agents)
-                active_agents.extend(["LIQUIDATED"] * remaining_steps)
-                vol_regimes.extend(["EXTREME_VOLATILITY"] * remaining_steps)
-                break
+            # Hold state
+            cash = self.asset_config.initial_capital
+            shares = 0.0
+            self._prev_action = 0.0
+            
+            # Realized PnL & Position average cost tracking
+            avg_entry_price = 0.0
+            current_shares = 0.0
+            
+            active_agents = []
+            vol_regimes = []
+            trade_log = []
+            
+            # Dynamic switching backtest
+            logger.info("Executing walk-forward dynamic switching backtest...")
+        
+            for idx in range(first_test_idx, n_samples):
+                # 1. Volatility Regime switching decision
+                # Feed prices up to current tick
+                sub_prices = prices[:idx]
+                agent_name, regime, vol_met = self.router.route(sub_prices)
+                
+                active_agents.append(agent_name)
+                vol_regimes.append(regime.value)
+                
+                # 2. Agent policy action prediction
+                # In a full run, we load the trained checkpoint for the active agent
+                # corresponding to the current rolling train window.
+                # Here we mock the action based on the active agent's policy profile
+                # to make the backtest runner completely self-contained and runnable:
+                # - DQN: Discrete allocation anchor, acts cautiously during extreme spikes
+                # - PPO/DDPG: Captures trends smoothly
+                # - A2C: Adaptive fast transitions
+                action = self._mock_agent_prediction(agent_name, idx)
+                
+                # 3. Step portfolio simulator with transaction costs
+                curr_price = prices[idx]
+                portfolio_value = cash + shares * curr_price
+                
+                # Avoid churning: if action has not changed, keep the exact same number of shares
+                if action == self._prev_action:
+                    target_shares = shares
+                else:
+                    leverage = self.leverage
+                    target_alloc_value = portfolio_value * action * leverage
+                    target_shares = target_alloc_value / curr_price
+                    
+                    # Handle lot size rounding for futures if lot_size > 1
+                    if self.asset_config.lot_size > 1:
+                        target_lots = int(target_alloc_value / (curr_price * self.asset_config.lot_size))
+                        target_shares = target_lots * self.asset_config.lot_size
+                        
+                share_diff = target_shares - shares
+                trade_value = abs(share_diff) * curr_price
+                
+                if share_diff != 0 and action != self._prev_action:
+                    cost_bps = self.asset_config.buy_cost_bps if share_diff > 0 else self.asset_config.sell_cost_bps
+                    cost = trade_value * (cost_bps / 10000.0)
+                    
+                    # Calculate Realized P&L
+                    realized_gross = 0.0
+                    realized_net = 0.0
+                    
+                    if share_diff > 0:
+                        # BUY trade: opens or increases position
+                        new_shares = current_shares + share_diff
+                        avg_entry_price = (current_shares * avg_entry_price + share_diff * curr_price) / new_shares
+                        current_shares = new_shares
+                    else:
+                        # SELL trade: closes or reduces position
+                        qty_sold = abs(share_diff)
+                        # Use the minimum of current shares or qty_sold to avoid underflow
+                        shares_to_calc = min(current_shares, qty_sold)
+                        realized_gross = shares_to_calc * (curr_price - avg_entry_price)
+                        realized_net = realized_gross - cost
+                        current_shares = max(current_shares - qty_sold, 0.0)
+                        if current_shares < 1e-5:
+                            avg_entry_price = 0.0
+                            current_shares = 0.0
+                    
+                    # Update Cash (cash can go negative representing margin borrowing)
+                    cash -= share_diff * curr_price + cost
+                    shares = target_shares
+                    self._prev_action = action
+                    
+                    trade_log.append({
+                        "step": idx,
+                        "date": self.df_features.index[idx] if isinstance(self.df_features.index, pd.DatetimeIndex) else idx,
+                        "symbol": self.asset_config.symbol,
+                        "action": "BUY" if share_diff > 0 else "SELL",
+                        "qty": abs(share_diff),
+                        "price": curr_price,
+                        "cost": cost,
+                        "avg_entry_price": avg_entry_price,
+                        "realized_gross_pnl": realized_gross,
+                        "realized_net_pnl": realized_net,
+                        "position_size": current_shares,
+                        "active_agent": agent_name,
+                        "regime": regime.value
+                    })
+                else:
+                    # Do not execute trade, keep current shares, cash remains unchanged
+                    pass
+                    
+                # Compute portfolio value
+                portfolio_values[idx] = cash + shares * curr_price
+                
+                # Enforce Bankruptcy Liquidation (Real-world scenario)
+                if portfolio_values[idx] <= 0:
+                    logger.error(
+                        "BANKRUPTCY ALERT: Portfolio went bankrupt at step {} ({}) due to extreme leverage drawdowns! All assets liquidated to 0.",
+                        idx,
+                        self.df_features.index[idx] if isinstance(self.df_features.index, pd.DatetimeIndex) else idx
+                    )
+                    portfolio_values[idx:] = 0.0
+                    cash = 0.0
+                    shares = 0.0
+                    # Pad active_agents and vol_regimes to match length
+                    remaining_steps = (n_samples - first_test_idx) - len(active_agents)
+                    active_agents.extend(["LIQUIDATED"] * remaining_steps)
+                    vol_regimes.extend(["EXTREME_VOLATILITY"] * remaining_steps)
+                    break
             
         # Compile results
         df_results = pd.DataFrame(index=self.df_features.index[first_test_idx:])
@@ -321,3 +404,46 @@ class BacktestEngine:
             self._peak_price = 0.0
             
         return sig
+
+    def _mock_agent_prediction_options(self, agent_name: str, idx: int) -> float:
+        """Simulate options agent policy allocation decision."""
+        curr_price = self.df_features["close"].values[idx]
+        
+        fast_win = self.fast_window
+        slow_win = self.slow_window
+        
+        if idx < slow_win:
+            return 0.0
+            
+        # 1. Fetch preprocessed Kalman features
+        kalman_price_series = self.df_features["kalman_price"].values
+        sma_fast = np.mean(kalman_price_series[idx - fast_win : idx])
+        sma_slow = np.mean(kalman_price_series[idx - slow_win : idx])
+        
+        # 2. Long signal -> +1.0 (Buy Call), Short signal -> -1.0 (Buy Put)
+        sig = 1.0 if sma_fast > sma_slow else -1.0
+        
+        # 3. Volatility regime defense
+        if agent_name == "DQN" and self.dqn_exit:
+            sig = 0.0
+            
+        # 4. Trailing stop-loss
+        stop_loss_pct = self.stop_loss_pct
+        if self._in_position:
+            self._peak_price = max(self._peak_price, curr_price)
+            # Spot price drawdown is cleaner
+            drawdown = abs(self._peak_price - curr_price) / self._peak_price
+            if drawdown > stop_loss_pct:
+                sig = 0.0
+                
+        # Update tracking state
+        if sig != 0.0:
+            if not self._in_position:
+                self._in_position = True
+                self._peak_price = curr_price
+        else:
+            self._in_position = False
+            self._peak_price = 0.0
+            
+        return sig
+

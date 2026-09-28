@@ -115,9 +115,10 @@ def run_joint_live_trading(
         logger.warning(f"Error loading saved JSON configs: {e}. Using robust defaults.")
         
     # 3. Bootstrap historical data for both symbols
+    today_str = pd.Timestamp.now().strftime("%Y-%m-%d")
     for asset_key, item in assets.items():
         logger.info(f"Bootstrapping historical prices for {asset_key} ({item['config'].symbol})...")
-        bootstrap_df = data_client.fetch_ohlcv(symbol=item['config'].symbol, timeframe="1d")
+        bootstrap_df = data_client.fetch_ohlcv(symbol=item['config'].symbol, timeframe="1d", end=today_str)
         if bootstrap_df.empty:
             logger.error(f"Could not bootstrap data for {asset_key}. Aborting.")
             return
@@ -134,6 +135,7 @@ def run_joint_live_trading(
         if current_shares > 0:
             item["in_pos"] = True
             item["peak_price"] = item["prices_list"][-1]
+            item["prev_sig"] = 1.0
             logger.info(f"Detected active holding of {current_shares} shares in {asset_key}. Initial Peak price set to {item['peak_price']:.2f}")
 
     # 4. Real-time multi-asset execution loop
@@ -248,6 +250,7 @@ def run_joint_live_trading(
             logger.warning(f"   Applying active scaling factor of {scaling_factor:.4f} to fit within Alpaca leverage limit.")
         
         # Stage C: Execution orders placement
+        order_plan = []
         for asset_key, item in assets.items():
             sig = target_signals[asset_key]
             ltp = current_ltps[asset_key]
@@ -265,25 +268,50 @@ def run_joint_live_trading(
             
             logger.info(f"[{asset_key} EXECUTION] Signal={sig} | Scaled Capital=USD {scaled_capital:.2f} | TargetShares={target_shares} | SharesHeld={current_shares} | Order Qty={trade_diff}")
             
-            # Submit order if there's a signal change or meaningful rebalance
-            if trade_diff != 0 and sig != item["prev_sig"]:
+            # Submit order if there's a signal change, position exit, or meaningful rebalance (>$200)
+            should_trade = False
+            if trade_diff != 0:
+                if sig != item["prev_sig"] or target_shares == 0:
+                    should_trade = True
+                elif abs(trade_diff * ltp) >= 200.0:
+                    should_trade = True
+                    
+            if should_trade:
                 side = OrderSide.BUY if trade_diff > 0 else OrderSide.SELL
                 trade_qty = abs(trade_diff)
-                try:
-                    order_id = executor.place_order(symbol=item['config'].symbol, side=side, qty=trade_qty)
-                    if order_id:
-                        logger.success(f"Order submitted successfully for {asset_key}! Side={side.value} | Qty={trade_qty} | Order ID={order_id}")
-                        item["prev_sig"] = sig
-                        if sig > 0:
-                            item["in_pos"] = True
-                            item["peak_price"] = ltp
-                        else:
-                            item["in_pos"] = False
-                            item["peak_price"] = 0.0
-                except Exception as e:
-                    logger.error(f"Order placement failed for {asset_key}: {e}")
+                order_plan.append({
+                    "asset_key": asset_key,
+                    "item": item,
+                    "side": side,
+                    "trade_qty": trade_qty,
+                    "sig": sig,
+                    "ltp": ltp
+                })
             else:
                 logger.info(f"No trading action required for {asset_key}.")
+
+        # Execute SELL orders first to free up buying power, then BUY orders
+        order_plan.sort(key=lambda x: 0 if x["side"] == OrderSide.SELL else 1)
+        for order_info in order_plan:
+            asset_key = order_info["asset_key"]
+            item = order_info["item"]
+            side = order_info["side"]
+            trade_qty = order_info["trade_qty"]
+            sig = order_info["sig"]
+            ltp = order_info["ltp"]
+            try:
+                order_id = executor.place_order(symbol=item['config'].symbol, side=side, qty=trade_qty)
+                if order_id:
+                    logger.success(f"Order submitted successfully for {asset_key}! Side={side.value} | Qty={trade_qty} | Order ID={order_id}")
+                    item["prev_sig"] = sig
+                    if sig > 0:
+                        item["in_pos"] = True
+                        item["peak_price"] = ltp
+                    else:
+                        item["in_pos"] = False
+                        item["peak_price"] = 0.0
+            except Exception as e:
+                logger.error(f"Order placement failed for {asset_key}: {e}")
                 
         # 5. Generate unified joint advisory report from Groq AI Analyst
         try:

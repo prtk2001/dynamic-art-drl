@@ -270,6 +270,12 @@ class _BaseTradingEnv(gym.Env):
             # Hold — no change
             target_shares = self._shares_held
 
+        # Apply lot sizing rules if lot_size > 1 (e.g. for futures)
+        if self.asset_config.lot_size > 1:
+            lot_size = self.asset_config.lot_size
+            target_lots = int(target_shares / lot_size)
+            target_shares = target_lots * lot_size
+
         shares_delta = target_shares - self._shares_held
         trade_value = abs(shares_delta) * current_price
         transaction_cost = 0.0
@@ -288,6 +294,10 @@ class _BaseTradingEnv(gym.Env):
                 # Reduce to affordable amount
                 affordable_value = self._cash / (1.0 + self.buy_cost_frac)
                 shares_delta = affordable_value / current_price
+                if self.asset_config.lot_size > 1:
+                    lot_size = self.asset_config.lot_size
+                    delta_lots = int(shares_delta / lot_size)
+                    shares_delta = delta_lots * lot_size
                 trade_value = shares_delta * current_price
                 cost = trade_value * self.buy_cost_frac
                 total_outflow = trade_value + cost

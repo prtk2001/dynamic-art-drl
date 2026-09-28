@@ -127,7 +127,8 @@ def run_live_trading(
             
     # ── 3. Bootstrap Historical Series ──────────────────────────────────────
     logger.info("Bootstrapping historical prices for feature engineering sliding window...")
-    bootstrap_df = data_client.fetch_ohlcv(symbol=asset_config.symbol, timeframe=timeframe)
+    today_str = pd.Timestamp.now().strftime("%Y-%m-%d")
+    bootstrap_df = data_client.fetch_ohlcv(symbol=asset_config.symbol, timeframe=timeframe, end=today_str)
     if bootstrap_df.empty:
         logger.error("Could not fetch bootstrap data from Alpaca client. Aborting loop.")
         return
@@ -149,6 +150,7 @@ def run_live_trading(
     if current_shares > 0:
         in_pos = True
         peak_price = prices_list[-1]
+        prev_action = 1.0
         logger.info("Detected existing position of {} shares. Initialized Trailing Peak price: {:.2f}", current_shares, peak_price)
         
     for i in range(1, loop_count + 1):
@@ -277,7 +279,7 @@ def run_live_trading(
         trade_diff = target_shares - shares
         
         # 6. Submit Paper orders to Alpaca Sandbox
-        if trade_diff != 0 and sig != prev_action:
+        if trade_diff != 0 and (sig != prev_action or target_shares == 0):
             side = OrderSide.BUY if trade_diff > 0 else OrderSide.SELL
             trade_qty = abs(trade_diff)
             logger.info("Executing Paper Order Side={} | Qty={} shares | Action={:.2f}", side.value, trade_qty, sig)
